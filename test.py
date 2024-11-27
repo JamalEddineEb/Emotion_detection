@@ -27,7 +27,7 @@ EMOJI = {
  3: cv2.imread('emojis/0-angry.png')
  }
 
-TEST_IMAGE_PATH = "./images/test_joie.png"
+TEST_IMAGE_PATH = "./images/test.png"
 
 # Fonction de localisation des visages - modifications pour utilisation avec flux video filmant 1 seule personne
 def localize_face(frame):
@@ -76,17 +76,15 @@ def detection_emotion():
 with open(TEST_IMAGE_PATH,'r') as f:
     face = f
 
-def preprocess_image(image_path, target_size=(48, 48)):
+def preprocess_image(image_path):
     # Load the image and resize it
-    img = cv2.imread(image_path, 0)
-    target_size = (target_size,target_size)
-    img = load_img(image_path, target_size=target_size, color_mode='grayscale')
+    img = load_img(image_path, target_size=(48,48), color_mode='grayscale')
     # img = load_img(image_path, target_size=target_size, color_mode='grayscale')
     img_array = img_to_array(img) / 255.0  # Normalize the image to [0, 1]
     print(np.array(img_array).shape)
     return np.expand_dims(img_array, axis=0)  # Add batch dimension
 
-image = preprocess_image(TEST_IMAGE_PATH, 0)
+image = preprocess_image(TEST_IMAGE_PATH)
 
 
 
