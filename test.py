@@ -27,7 +27,7 @@ EMOJI = {
  3: cv2.imread('emojis/0-angry.png')
  }
 
-TEST_IMAGE_PATH = "./images/test.png"
+TEST_IMAGE_PATH = "./saved2.png"
 
 # Fonction de localisation des visages - modifications pour utilisation avec flux video filmant 1 seule personne
 def localize_face(frame):
@@ -38,6 +38,7 @@ def localize_face(frame):
         gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
         resized = cv2.resize(gray,(48,48)).astype('float') / 255
         localized = resized.reshape(1,48,48,1)
+        plt.imsave("./saved2.png",resized, cmap='gray') 
         return localized, [x, y, w, h]
 
 
@@ -49,8 +50,8 @@ def detection_emotion():
 
         # Localisation des visages dans l'image
         face, box = localize_face(frame)
-        
         # Reconnaissance de l'émotion
+        print(np.array(face).shape)
         emotion = np.argmax(recognator(face))
 
         # Création d'une ROI pour l'affichage du smiley
@@ -82,11 +83,11 @@ def preprocess_image(image_path):
     # img = load_img(image_path, target_size=target_size, color_mode='grayscale')
     img_array = img_to_array(img) / 255.0  # Normalize the image to [0, 1]
     print(np.array(img_array).shape)
+    plt.imsave("./saved.png",img, cmap='gray') 
     return np.expand_dims(img_array, axis=0)  # Add batch dimension
 
 image = preprocess_image(TEST_IMAGE_PATH)
+# emotion = np.argmax(recognator(image))
+# print(emotion)
 
-
-
-emotion = np.argmax(recognator(image))
-print(emotion)
+detection_emotion()
