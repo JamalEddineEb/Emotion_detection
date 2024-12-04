@@ -4,6 +4,26 @@ import cv2
 from mtcnn_cv2 import MTCNN
 import time
 from performance_monitor import PerformanceMonitor
+import onnxruntime as rt
+
+# Configure session options
+options = rt.SessionOptions()
+options.enable_profiling = True
+
+# Specify GPU execution provider
+EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']  # Fallback to CPU if GPU is unavailable
+
+# Load the ONNX model with GPU support
+try:
+    session = rt.InferenceSession('model.onnx', options, providers=EP_list)
+    print("Model loaded successfully with GPU execution provider.")
+except Exception as e:
+    raise ValueError(f"Failed to load the model: {e}")
+
+# Check which providers are being used
+print("Available providers:", rt.get_available_providers())
+print("Using providers:", session.get_providers())
+
 
 monitor = PerformanceMonitor()
 
@@ -60,16 +80,31 @@ def process_face(frame):
 
 @monitor.measure('inference')
 def run_inference(face):
-    interpreter.set_tensor(input_details[0]['index'], face)
-    interpreter.invoke()
-    output = interpreter.get_tensor(output_details[0]['index'])
+    input_name = session.get_inputs()[0].name
+    output_name = session.get_outputs()[0].name
+    output = session.run([output_name], {input_name: face})[0]
     return np.argmax(output)
+
 
 @monitor.measure('display')
 def update_display(frame, emotion):
-    rows, cols, _ = EMOJI[0].shape
-    frame[0:rows, 0:cols] = EMOJI[emotion]
+    # Define the position where the emoji will be placed
+    x, y = 10, 10  # Top-left corner of the frame
+
+    # Get the corresponding emoji image
+    rows,cols,channels = EMOJI[0].shape
+    roi_smiley = frame[0:rows, 0:cols]
+
+    # Selon le résultat de la prédiction
+    frame[0:rows, 0:cols ] = EMOJI[emotion]
+
+    # Retourne l'image pour l'afficer en miroir
+    frame = cv2.flip(frame, 1)
+
+    # Flip the frame horizontally
     return cv2.flip(frame, 1)
+
+
 
 def detection_emotion(test_mode=False, num_frames=100):
     cam = cv2.VideoCapture(0)
@@ -84,6 +119,12 @@ def detection_emotion(test_mode=False, num_frames=100):
         frame_count += 1
         
         face, box = process_face(frame)
+
+        if box is not None:
+            # Draw the bounding box
+            x, y, w, h = box
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        
         
         if face is not None:
             emotion = run_inference(face)
@@ -91,7 +132,7 @@ def detection_emotion(test_mode=False, num_frames=100):
             
         cv2.imshow('How are you ?', frame)
         
-        if cv2.waitKey(1) == 27 or (test_mode and frame_count >= num_frames):
+        if cv2.waitKey(1) == 27 :
             break
     
     duration = time.time() - start_time
