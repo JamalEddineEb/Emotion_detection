@@ -1,9 +1,8 @@
 numpy
-opencv-python
 scikit-learn
-matplotlib
+flask
 tensorflow
-keras 
 mtcnn
 mtcnn-opencv
-jupyter
+performance-monitor
+onnxruntime

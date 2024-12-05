@@ -3,12 +3,14 @@ import numpy as np
 import cv2
 from mtcnn_cv2 import MTCNN
 import time
-from performance_monitor import PerformanceMonitor
+from flask import Flask, Response
+# from performance_monitor import PerformanceMonitor
 import onnxruntime as rt
 
 # Configure session options
 options = rt.SessionOptions()
 options.enable_profiling = True
+app = Flask(__name__)
 
 # Specify GPU execution provider
 EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']  # Fallback to CPU if GPU is unavailable
@@ -25,14 +27,11 @@ print("Available providers:", rt.get_available_providers())
 print("Using providers:", session.get_providers())
 
 
-monitor = PerformanceMonitor()
+# monitor = PerformanceMonitor()
 
 # Initialize components
 detector = MTCNN()
-interpreter = tf.lite.Interpreter(model_path="model.tflite")
-interpreter.allocate_tensors()
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+
 
 EMOJI = {
     0: cv2.imread('emojis/5-sad.png'),
@@ -41,27 +40,27 @@ EMOJI = {
     3: cv2.imread('emojis/0-angry.png')
 }
 
-@monitor.measure('color_conversion')
+# @monitor.measure('color_conversion')
 def convert_to_rgb(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-@monitor.measure('mtcnn_detection')
+# @monitor.measure('mtcnn_detection')
 def detect_face(image):
     faces = detector.detect_faces(image)
     if faces and faces[0]['confidence'] > 0.6:
         return faces[0]['box']
     return None
 
-@monitor.measure('face_cropping')
+# @monitor.measure('face_cropping')
 def crop_face(image, box):
     x, y, w, h = box
     return image[y-10:y+h+10, x-10:x+w+10]
 
-@monitor.measure('grayscale_conversion')
+# @monitor.measure('grayscale_conversion')
 def convert_to_gray(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-@monitor.measure('resize_normalize')
+# @monitor.measure('resize_normalize')
 def resize_and_normalize(image):
     resized = cv2.resize(image, (48, 48))
     normalized = resized.astype('float32') / 255
@@ -78,7 +77,7 @@ def process_face(frame):
         return processed, box
     return None, None
 
-@monitor.measure('inference')
+# @monitor.measure('inference')
 def run_inference(face):
     input_name = session.get_inputs()[0].name
     output_name = session.get_outputs()[0].name
@@ -86,7 +85,7 @@ def run_inference(face):
     return np.argmax(output)
 
 
-@monitor.measure('display')
+# @monitor.measure('display')
 def update_display(frame, emotion):
     # Define the position where the emoji will be placed
     x, y = 10, 10  # Top-left corner of the frame
@@ -106,42 +105,45 @@ def update_display(frame, emotion):
 
 
 
-def detection_emotion(test_mode=False, num_frames=100):
+
+def generate_frames(test_mode=False, num_frames=100):
     cam = cv2.VideoCapture(0)
     frame_count = 0
     start_time = time.time()
-    
+
     while True:
         ret_val, frame = cam.read()
         if not ret_val:
             break
-            
+
         frame_count += 1
-        
         face, box = process_face(frame)
 
         if box is not None:
             # Draw the bounding box
             x, y, w, h = box
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        
-        
+
         if face is not None:
             emotion = run_inference(face)
             frame = update_display(frame, emotion)
-            
-        cv2.imshow('How are you ?', frame)
-        
-        if cv2.waitKey(1) == 27 :
+
+        # Encode the frame as JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+
+        # Yield the frame as a multipart HTTP response
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+        if test_mode and frame_count >= num_frames:
             break
-    
-    duration = time.time() - start_time
-    
-    if test_mode:
-        monitor.print_metrics(duration, frame_count)
-    
+
     cam.release()
-    cv2.destroyAllWindows()
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    detection_emotion(test_mode=True, num_frames=100)
+    app.run(host='0.0.0.0', port=5000)
