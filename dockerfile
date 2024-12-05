@@ -29,7 +29,5 @@ COPY model.onnx .
 COPY real_time.py .
 COPY emojis/ emojis/
 
-EXPOSE 5000
-
 # Command to run your script or application
 CMD ["python3", "real_time.py"]

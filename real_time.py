@@ -97,9 +97,6 @@ def update_display(frame, emotion):
     # Selon le résultat de la prédiction
     frame[0:rows, 0:cols ] = EMOJI[emotion]
 
-    # Retourne l'image pour l'afficer en miroir
-    frame = cv2.flip(frame, 1)
-
     # Flip the frame horizontally
     return cv2.flip(frame, 1)
 
