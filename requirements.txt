@@ -2,5 +2,6 @@ numpy
 scikit-learn
 flask
 tensorflow
+opencv_python
 performance-monitor
 onnxruntime

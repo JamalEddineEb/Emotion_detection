@@ -20,5 +20,7 @@ COPY real_time.py .
 COPY emojis/ emojis/
 COPY mtcnn_ort/ mtcnn_ort/
 
+EXPOSE 5000
+
 # Command to run your script or application
 CMD ["python3", "real_time.py"]
