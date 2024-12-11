@@ -2,7 +2,5 @@ numpy
 scikit-learn
 flask
 tensorflow
-mtcnn
-mtcnn-opencv
 performance-monitor
 onnxruntime

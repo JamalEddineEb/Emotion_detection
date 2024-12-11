@@ -1,7 +1,6 @@
-import tensorflow as tf
 import numpy as np
 import cv2
-from mtcnn_cv2 import MTCNN
+from mtcnn_ort import MTCNN
 import time
 from flask import Flask, Response
 # from performance_monitor import PerformanceMonitor
