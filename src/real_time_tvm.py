@@ -105,15 +105,18 @@ def process_face(frame):
 
 # @monitor.measure('inference')
 def run_inference(face):
-    # Set the input tensor
-    model.set_input("input", tvm.nd.array(face))
+    # Set the input tensor - make sure "input" matches the actual input name
+    model.set_input("module_wrapper_input", tvm.nd.array(face))  # Update the name as necessary
 
     # Execute the model
     model.run()
 
-    # Get the output tensor
+    # Get the output tensor (first output)
     output = model.get_output(0).asnumpy()
+
+    # Process the output and return the class with the highest probability
     return np.argmax(output)
+
 
 
 # @monitor.measure('display')
