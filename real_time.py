@@ -3,11 +3,12 @@ import cv2
 from mtcnn_ort import MTCNN
 import time
 from flask import Flask, Response
-# from performance_monitor import PerformanceMonitor
+from performance_monitor import PerformanceMonitor
 import onnxruntime as rt
 
 # Configure session options
 options = rt.SessionOptions()
+options.graph_optimization_level= rt.GraphOptimizationLevel.ORT_ENABLE_ALL
 options.enable_profiling = True
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ print("Available providers:", rt.get_available_providers())
 print("Using providers:", session.get_providers())
 
 
-# monitor = PerformanceMonitor()
+monitor = PerformanceMonitor()
 
 # Initialize components
 detector = MTCNN()
