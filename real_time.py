@@ -8,8 +8,8 @@ import onnxruntime as rt
 
 # Configure session options
 options = rt.SessionOptions()
-options.graph_optimization_level= rt.GraphOptimizationLevel.ORT_ENABLE_ALL
-options.enable_profiling = True
+# options.graph_optimization_level= rt.GraphOptimizationLevel.ORT_ENABLE_ALL
+# options.enable_profiling = True
 app = Flask(__name__)
 
 # Specify GPU execution provider
@@ -72,6 +72,8 @@ def process_face(frame):
     
     if box is not None:
         cropped = crop_face(rgb_image, box)
+        if cropped is None or cropped.size == 0:
+            return None,None
         gray = convert_to_gray(cropped)
         processed = resize_and_normalize(gray)
         return processed, box
@@ -124,6 +126,9 @@ def generate_frames(test_mode=False, num_frames=100):
         if face is not None:
             emotion = run_inference(face)
             frame = update_display(frame, emotion)
+        else:
+            frame = cv2.flip(frame, 1)
+
 
         # Encode the frame as JPEG
         ret, buffer = cv2.imencode('.jpg', frame)
