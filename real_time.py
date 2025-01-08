@@ -44,7 +44,7 @@ EMOJI = {
 def convert_to_rgb(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-# @monitor.measure('mtcnn_detection')
+@monitor.measure('mtcnn_detection')
 def detect_face(image):
     faces = detector.detect_faces(image)
     if faces and faces[0]['confidence'] > 0.6:
@@ -79,7 +79,7 @@ def process_face(frame):
         return processed, box
     return None, None
 
-# @monitor.measure('inference')
+@monitor.measure('inference')
 def run_inference(face):
     input_name = session.get_inputs()[0].name
     output_name = session.get_outputs()[0].name
@@ -139,13 +139,14 @@ def generate_frames(test_mode=False, num_frames=100):
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
         if test_mode and frame_count >= num_frames:
+            monitor.print_metrics(time.time()-start_time,num_frames)
             break
 
     cam.release()
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(True), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
