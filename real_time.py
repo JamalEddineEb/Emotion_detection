@@ -8,7 +8,7 @@ import onnxruntime as rt
 
 # Configure session options
 options = rt.SessionOptions()
-# options.graph_optimization_level= rt.GraphOptimizationLevel.ORT_ENABLE_ALL
+options.graph_optimization_level= rt.GraphOptimizationLevel.ORT_ENABLE_ALL
 # options.enable_profiling = True
 app = Flask(__name__)
 

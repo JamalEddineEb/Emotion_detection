@@ -33,7 +33,10 @@ class ONNXModelOpenCV(ONNXModel):
 
 class ONNXModelONNXRuntime(ONNXModel):
     def __init__(self, path):
-        self.session = ort.InferenceSession(path)
+        options = ort.SessionOptions()
+        options.graph_optimization_level= ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+        self.session = ort.InferenceSession(path,sess_options=options)
         assert len(self.session.get_inputs()) == 1  # support only one input argument
         self.input_name = self.session.get_inputs()[0].name
 
