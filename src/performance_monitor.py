@@ -6,7 +6,7 @@ class PerformanceMonitor:
     def __init__(self):
         self.process = psutil.Process()
         self.metrics = {
-            'face_detection': {'time': [], 'memory': []},
+            'mtcnn_detection': {'time': [], 'memory': []},
             'color_conversion': {'time': [], 'memory': []},
             'face_cropping': {'time': [], 'memory': []},
             'grayscale_conversion': {'time': [], 'memory': []},
