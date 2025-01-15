@@ -36,7 +36,9 @@ class ONNXModelONNXRuntime(ONNXModel):
         options = ort.SessionOptions()
         options.graph_optimization_level= ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 
-        self.session = ort.InferenceSession(path,sess_options=options)
+        EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+
+        self.session = ort.InferenceSession(path,sess_options=options,providers=EP_list)
         assert len(self.session.get_inputs()) == 1  # support only one input argument
         self.input_name = self.session.get_inputs()[0].name
 
