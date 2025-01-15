@@ -31,7 +31,7 @@ print('2. Convert to TVM Relay')
 shape_dict = {"module_wrapper_input": [1, 48, 48, 1]}
 mod, params = relay.frontend.from_onnx(onnx_model,shape_dict)
 print('3. Compile for target')
-target = "llvm -mtriple=aarch64-linux-gnu -mattr=+neon"
+target = "llvm"
 # target = tvm.target.arm_cpu()
 
 # tune_tasks = autotvm.task.extract_from_program(mod, target=target,params=params)
@@ -40,21 +40,21 @@ target = "llvm -mtriple=aarch64-linux-gnu -mattr=+neon"
 # tuner = autotvm.tuner.XGBTuner(tune_tasks)
 # tuner.tune(n_trial=100)  # Number of tuning trials to run
 
-target_host = "llvm"
-tgt = tvm.target.Target(target, host=target_host)
+# target_host = "llvm"
+# tgt = tvm.target.Target(target, host=target_host)
 
-with tvm.transform.PassContext(opt_level=1):
-    lib = relay.build(mod, target=tgt, params=params)
-
-
-print('4. Export the model')
-lib.export_library("compiled-onnx-llvm-model.so")
-#lib = tvm.runtime.load_module("compiled-onnx-llvm-model.so")
+# with tvm.transform.PassContext(opt_level=1):
+#     lib = relay.build(mod, target=tgt, params=params)
 
 
-print('5. Create an executor')
-device = tvm.device(target, 0)
-module = graph_executor.GraphModule(lib["default"](device))
+# print('4. Export the model')
+# lib.export_library("compiled-onnx-llvm-model.so")
+# lib = tvm.runtime.load_module("compiled-onnx-llvm-model.so")
+
+
+# print('5. Create an executor')
+# device = tvm.device(target, 0)
+# module = graph_executor.GraphModule(lib["default"](device))
 
 number = 10
 repeat = 1
