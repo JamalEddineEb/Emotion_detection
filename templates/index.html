@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Video and Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 20px;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .video-container {
+            width: 320px;
+            height: 240px;
+            border: 1px solid black;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 320px;
+            height: 240px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Video and Charts</h1>
+    <div class="container">
+        <!-- Video Feed Section -->
+        <div class="video-container">
+            <img src="/video_feed" alt="Video Feed" style="width: 100%; height: 100%;">
+        </div>
+
+        <!-- Graphs Section -->
+        <div class="chart-container">
+            <!-- CPU Usage Chart -->
+            <canvas id="cpuChart"></canvas>
+
+            <!-- Memory Usage Chart -->
+            <canvas id="memoryChart"></canvas>
+
+            <!-- Face Detection Inference Time Chart -->
+            <canvas id="faceChart"></canvas>
+
+            <!-- Emotion Prediction Inference Time Chart -->
+            <canvas id="emotionChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const MAX_POINTS = 100; // Limiting the number of points on the graph to 100 for smooth rendering
+
+        const cpuData = [], memoryData = [];
+        const faceInferenceData = [], emotionInferenceData = [];
+        const labels = [];
+
+        // CPU Usage Chart
+        const cpuChart = new Chart(document.getElementById('cpuChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'CPU Usage (%)',
+                    data: cpuData,
+                    borderColor: 'green',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Time' }},
+                    y: { title: { display: true, text: 'CPU Usage (%)' }}
+                }
+            }
+        });
+
+        // Memory Usage Chart
+        const memoryChart = new Chart(document.getElementById('memoryChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Memory Usage (%)',
+                    data: memoryData,
+                    borderColor: 'blue',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Time' }},
+                    y: { title: { display: true, text: 'Memory Usage (%)' }}
+                }
+            }
+        });
+
+        // Face Detection Inference Time Chart
+        const faceChart = new Chart(document.getElementById('faceChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Face Detection Inference Time (s)',
+                    data: faceInferenceData,
+                    borderColor: 'orange',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Time' }},
+                    y: { title: { display: true, text: 'Inference Time (s)' }}
+                }
+            }
+        });
+
+        // Emotion Prediction Inference Time Chart
+        const emotionChart = new Chart(document.getElementById('emotionChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Emotion Prediction Inference Time (s)',
+                    data: emotionInferenceData,
+                    borderColor: 'red',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Time' }},
+                    y: { title: { display: true, text: 'Inference Time (s)' }}
+                }
+            }
+        });
+
+        // Receive system data (CPU, Memory, Face Detection, Emotion Prediction) every 400ms
+        socket.on('update_system', (data) => {
+            if (labels.length > MAX_POINTS) labels.shift();
+            const timestamp = new Date().toLocaleTimeString();
+            labels.push(timestamp);
+
+            // Shift and update data arrays
+            if (cpuData.length > MAX_POINTS) cpuData.shift();
+            if (memoryData.length > MAX_POINTS) memoryData.shift();
+            if (faceInferenceData.length > MAX_POINTS) faceInferenceData.shift();
+            if (emotionInferenceData.length > MAX_POINTS) emotionInferenceData.shift();
+
+            // Update data arrays
+            cpuData.push(data.cpu);
+            memoryData.push(data.memory);
+            faceInferenceData.push(data.detection_time);
+            emotionInferenceData.push(data.prediction_time);
+
+            // Update the charts
+            cpuChart.update();
+            memoryChart.update();
+            faceChart.update();
+            emotionChart.update();
+        });
+    </script>
+</body>
+</html>
