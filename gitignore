@@ -1,2 +1,3 @@
 data/
 onnxruntime_*
+**/__pycache
