@@ -144,7 +144,7 @@ def generate_frames(test_mode=False, num_frames=100):
 
     cam.release()
 
-@app.route('/video_feed')
+@app.route('/')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
